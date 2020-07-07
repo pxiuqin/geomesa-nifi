@@ -12,7 +12,7 @@ import org.apache.nifi.components.{ValidationContext, ValidationResult, Validato
 import org.locationtech.geomesa.convert.{ConfArgs, ConverterConfigResolver}
 
 /**
-  * Simple validator of a convert spec. Tries to parse it to make sure that it can.
+  * Simple validator of a convert spec. Tries to parse it to make sure that it can.【转换时进行的验证】
   */
 object ConverterValidator extends Validator {
   override def validate(subject: String, input: String, context: ValidationContext): ValidationResult =

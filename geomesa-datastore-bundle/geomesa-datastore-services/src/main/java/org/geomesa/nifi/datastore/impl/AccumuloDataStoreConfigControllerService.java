@@ -27,11 +27,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+//实现相关获取配置文件的接口
 @CapabilityDescription("Defines credentials for GeoMesa Accumulo processors")
-@SeeAlso(classNames = { "org.geomesa.nifi.processors.accumulo.PutGeoMesaAccumulo" })
-@Tags({ "geo", "geomesa","accumulo" })
+@SeeAlso(classNames = {"org.geomesa.nifi.processors.accumulo.PutGeoMesaAccumulo"})
+@Tags({"geo", "geomesa", "accumulo"})
 public class AccumuloDataStoreConfigControllerService
-      extends AbstractControllerService implements DataStoreConfigService {
+        extends AbstractControllerService implements DataStoreConfigService {
 
     public static final PropertyDescriptor ZOOKEEPER_PROP = new PropertyDescriptor.Builder()
             .name("accumulo.zookeepers")
@@ -72,6 +73,7 @@ public class AccumuloDataStoreConfigControllerService
     private static final List<PropertyDescriptor> properties;
 
     static {
+        //给定了数据源配置属性相关要求
         final List<PropertyDescriptor> props = new ArrayList<>();
         props.add(ZOOKEEPER_PROP);
         props.add(INSTANCE_ID_PROP);
@@ -89,7 +91,7 @@ public class AccumuloDataStoreConfigControllerService
         for (PropertyDescriptor prop : properties) {
             map.put(prop.getName(), context.getProperty(prop).getValue());
         }
-        params = Collections.unmodifiableMap(map);
+        params = Collections.unmodifiableMap(map);  //基于前端用户数据的属性值构建参数
     }
 
     @OnDisabled

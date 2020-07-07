@@ -13,6 +13,7 @@ import org.apache.nifi.controller.ControllerService;
 import java.io.Serializable;
 import java.util.Map;
 
+//继承相关nifi-Controller
 public interface DataStoreConfigService extends ControllerService {
     Map<String, Serializable> getDataStoreParameters();
 }

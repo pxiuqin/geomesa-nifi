@@ -416,7 +416,7 @@ object AbstractGeoIngestProcessor {
   }
 
   /**
-    * Processor configuration properties
+    * Processor configuration properties【给定的配置属性】
     */
   object Properties {
 
@@ -437,7 +437,7 @@ object AbstractGeoIngestProcessor {
           .required(false)
           .description("Manually define a SimpleFeatureType (SFT) config spec")
           .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
-          .addValidator(SimpleFeatureTypeValidator)
+          .addValidator(SimpleFeatureTypeValidator)  //添加一个SFT验证
           .build()
 
     val FeatureNameOverride: PropertyDescriptor =

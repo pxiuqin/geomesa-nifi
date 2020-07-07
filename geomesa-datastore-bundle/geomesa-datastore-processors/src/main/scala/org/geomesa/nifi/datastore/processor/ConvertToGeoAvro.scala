@@ -27,15 +27,16 @@ import org.opengis.feature.simple.SimpleFeatureType
 
 import scala.collection.JavaConverters._
 
-@Tags(Array("OGC", "geo", "convert", "converter", "simple feature", "geotools", "geomesa"))
+//自定义一个nifi-处理器
+@Tags(Array("OGC", "geo", "convert", "converter", "simple feature", "geotools", "geomesa"))  //检索使用tag
 @CapabilityDescription("Convert incoming files into OGC SimpleFeature avro data files using GeoMesa Converters")
 @WritesAttribute(attribute = "mime.type", description = "the mime type of the outgoing format")
 class ConvertToGeoAvro extends AbstractProcessor {
 
   import ConvertToGeoAvro._
 
-  private var descriptors: java.util.List[PropertyDescriptor] = _
-  private var relationships: java.util.Set[Relationship] = _
+  private var descriptors: java.util.List[PropertyDescriptor] = _  //process的属性描述
+  private var relationships: java.util.Set[Relationship] = _  //process的in和out的关系
 
   @volatile
   private var converter: convert2.SimpleFeatureConverter = _
@@ -73,16 +74,18 @@ class ConvertToGeoAvro extends AbstractProcessor {
   override def onTrigger(context: ProcessContext, session: ProcessSession): Unit =
     Option(session.get()).foreach(doWork(context, session, _))
 
+  //针对一个FlowFile开始处理
   private def doWork(context: ProcessContext, session: ProcessSession, flowFile: FlowFile): Unit = {
     try {
       val newFlowFile = session.write(flowFile, new StreamCallback {
+        //具体数据流的处理
         override def process(in: InputStream, out: OutputStream): Unit = {
-          val dfw = new AvroDataFileWriter(out, converter.targetSft)
+          val dfw = new AvroDataFileWriter(out, converter.targetSft)  //构建了一个Avro格式数据的写入器
           try {
             val fullFlowFileName = flowFile.getAttribute("path") + flowFile.getAttribute("filename")
             getLogger.info(s"Converting path $fullFlowFileName")
             val ec = converter.createEvaluationContext(Map("inputFilePath" -> fullFlowFileName))
-            converter.process(in, ec).foreach(dfw.append)
+            converter.process(in, ec).foreach(dfw.append)  //调用转换过程并写入特定格式
           } finally {
             dfw.close()
           }
@@ -107,6 +110,7 @@ class ConvertToGeoAvro extends AbstractProcessor {
     }
   }
 
+  //获取SFC
   protected def getConverter(sft: SimpleFeatureType, context: ProcessContext): convert2.SimpleFeatureConverter = {
     val convertArg = Option(context.getProperty(ConverterName).getValue)
       .orElse(Option(context.getProperty(ConverterSpec).getValue))
@@ -119,6 +123,7 @@ class ConvertToGeoAvro extends AbstractProcessor {
   }
 }
 
+//定义相关配置属性
 object ConvertToGeoAvro {
 
   val SftName: PropertyDescriptor = new PropertyDescriptor.Builder()
@@ -130,7 +135,7 @@ object ConvertToGeoAvro {
     .build
 
   val ConverterName: PropertyDescriptor = new PropertyDescriptor.Builder()
-    .name("ConverterName")
+    .name("ConverterName")  //转换名称
     .description("Choose an SimpleFeature Converter defined by a GeoMesa SFT Provider (preferred)")
     .required(false)
     .allowableValues(ConverterConfigLoader.listConverterNames.toArray: _*)
@@ -145,21 +150,21 @@ object ConvertToGeoAvro {
     .build
 
   val SftSpec: PropertyDescriptor = new PropertyDescriptor.Builder()
-    .name("SftSpec")
+    .name("SftSpec")  //指定SFT配置文件
     .description("Manually define a SimpleFeatureType (SFT) config spec")
     .required(false)
     .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
     .build
 
   val ConverterSpec: PropertyDescriptor = new PropertyDescriptor.Builder()
-    .name("ConverterSpec")
+    .name("ConverterSpec")  //指定Convertr配置文件
     .description("Manually define a converter using typesafe config")
     .required(false)
     .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
     .build
 
   val OutputFormat: PropertyDescriptor = new PropertyDescriptor.Builder()
-    .name("OutputFormat")
+    .name("OutputFormat")  //导出文件格式
     .description("File format for the outgoing simple feature file")
     .required(true)
     .allowableValues(Set("avro").asJava)
