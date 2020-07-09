@@ -33,7 +33,7 @@ import org.opengis.feature.simple.{SimpleFeature, SimpleFeatureType}
 import scala.util.control.NonFatal
 
 /**
-  * Abstract ingest processor for geotools data stores
+  * Abstract ingest processor for geotools data stores【提供一个抽象GeoIngest的Processor，其他不同的DS-Ingest可以继承实现不同DS】
   *
   * @param dataStoreProperties properties exposed through NiFi used to load the data store
   */
@@ -88,25 +88,25 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
     val typeName = Option(context.getProperty(FeatureNameOverride).evaluateAttributeExpressions().getValue)
 
     val dataStore = {
-      val props = getDataStoreParams(context)
+      val props = getDataStoreParams(context)  //基于前端输入来获取DS参数
       lazy val safeToLog = {
-        val sensitive = context.getProperties.keySet().asScala.collect { case p if p.isSensitive => p.getName }
+        val sensitive = context.getProperties.keySet().asScala.collect { case p if p.isSensitive => p.getName }  //敏感参数
         props.map { case (k, v) => s"$k -> ${if (sensitive.contains(k)) { "***" } else { v }}" }
       }
       logger.trace(s"DataStore properties: ${safeToLog.mkString(", ")}")
-      DataStoreFinder.getDataStore(props.asJava)
+      DataStoreFinder.getDataStore(props.asJava)  //基于参数构建DS
     }
     require(dataStore != null, "Could not load datastore using provided parameters")
 
     try {
       val writers = if (context.getProperty(FeatureWriterCaching).getValue.toBoolean) {
         val timeout = context.getProperty(FeatureWriterCacheTimeout).evaluateAttributeExpressions().getValue
-        new PooledWriters(dataStore, FormatUtils.getTimeDuration(timeout, TimeUnit.MILLISECONDS))
+        new PooledWriters(dataStore, FormatUtils.getTimeDuration(timeout, TimeUnit.MILLISECONDS))  //给定超时时间
       } else {
         new SingletonWriters(dataStore)
       }
       try {
-        ingest = createIngest(context, dataStore, writers, sftArg, typeName)
+        ingest = createIngest(context, dataStore, writers, sftArg, typeName)  //构建Ingest对象
       } catch {
         case NonFatal(e) => writers.close(); throw e
       }
@@ -118,13 +118,13 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
   }
 
   override def onTrigger(context: ProcessContext, session: ProcessSession): Unit = {
-    val flowFiles = session.get(context.getProperty(NifiBatchSize).evaluateAttributeExpressions().asInteger())
+    val flowFiles = session.get(context.getProperty(NifiBatchSize).evaluateAttributeExpressions().asInteger()) //触发Process生成FlowFiles
     logger.debug(s"Processing ${flowFiles.size()} files in batch")
     if (flowFiles != null && flowFiles.size > 0) {
       flowFiles.asScala.foreach { f =>
         try {
           logger.debug(s"Processing file ${AbstractGeoIngestProcessor.fullName(f)}")
-          ingest.ingest(session, f)
+          ingest.ingest(session, f)  //调用Ingest
           session.transfer(f, SuccessRelationship)
         } catch {
           case NonFatal(e) =>
@@ -156,7 +156,7 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
   protected def getServiceProperties: Seq[PropertyDescriptor] = Seq.empty
 
   /**
-    * Get params for looking up the data store
+    * Get params for looking up the data store【基于前端填充值来构建DS的参数】
     *
     * @param context context
     * @return
@@ -175,6 +175,7 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
 
   protected def decorate(sft: SimpleFeatureType): Unit = {}
 
+  //继承类要实现该方法
   protected def createIngest(
       context: ProcessContext,
       dataStore: DataStore,

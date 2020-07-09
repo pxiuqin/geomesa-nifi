@@ -45,6 +45,7 @@ abstract class GeoToolsIngestProcessor extends AbstractGeoIngestProcessor(Seq(Ge
         .build()
   }
 
+  //给DS参数赋值
   override protected def getDataStoreParams(context: ProcessContext): Map[String, _] = {
     val dynamic = context.getProperties.asScala.collect {
       case (a, b) if a.getName != DataStoreName.getName => a.getName -> b
@@ -52,7 +53,7 @@ abstract class GeoToolsIngestProcessor extends AbstractGeoIngestProcessor(Seq(Ge
     super.getDataStoreParams(context) ++ dynamic
   }
 
-  // custom validate properties based on the specific datastore
+  // custom validate properties based on the specific datastore【自定义参数验证】
   override def customValidate(validationContext: ValidationContext): java.util.Collection[ValidationResult] = {
     val result = new java.util.ArrayList[ValidationResult]()
     result.addAll(super.customValidate(validationContext))

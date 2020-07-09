@@ -58,6 +58,7 @@ trait ConverterIngestProcessor extends AbstractGeoIngestProcessor {
     super.initDescriptors()
   }
 
+  //获取数据处理器配置参数
   override protected def getProcessorProperties: Seq[PropertyDescriptor] =
     super.getProcessorProperties ++ Seq(converterName, ConverterSpec, ConverterErrorMode)
 
