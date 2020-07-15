@@ -21,7 +21,7 @@ import scala.util.control.NonFatal
 trait PropertyDescriptorUtils extends LazyLogging {
 
   /**
-   * Creates a nifi property descriptor based on a geotools data store parameter
+   * Creates a nifi property descriptor based on a geotools data store parameter【基于参数创建描述属性】
    *
    * @param param param
    * @return

@@ -87,6 +87,7 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
     val sftArg = AbstractGeoIngestProcessor.getFirst(context, Seq(sftName, SftSpec))
     val typeName = Option(context.getProperty(FeatureNameOverride).evaluateAttributeExpressions().getValue)
 
+    //基于配置参数来构建具体DS
     val dataStore = {
       val props = getDataStoreParams(context)  //基于前端输入来获取DS参数
       lazy val safeToLog = {
@@ -99,7 +100,8 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
     require(dataStore != null, "Could not load datastore using provided parameters")
 
     try {
-      val writers = if (context.getProperty(FeatureWriterCaching).getValue.toBoolean) {
+      //返回一个SFW
+      val writers = if (context.getProperty(FeatureWriterCaching).getValue.toBoolean) {  //如果有缓存的数据，需要和缓存数据结合
         val timeout = context.getProperty(FeatureWriterCacheTimeout).evaluateAttributeExpressions().getValue
         new PooledWriters(dataStore, FormatUtils.getTimeDuration(timeout, TimeUnit.MILLISECONDS))  //给定超时时间
       } else {
@@ -175,13 +177,13 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
 
   protected def decorate(sft: SimpleFeatureType): Unit = {}
 
-  //继承类要实现该方法
+  //继承类要实现该方法，创建特定DS的IngestProcessor
   protected def createIngest(
       context: ProcessContext,
       dataStore: DataStore,
       writers: Writers,
       sftArg: Option[String],
-      typeName: Option[String]): IngestProcessor
+      typeName: Option[String]): IngestProcessor  //不实现的情况就是构建了一个基本属性
 
   /**
    * Abstraction over ingest methods
@@ -222,7 +224,7 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
     )
 
     /**
-     * Ingest a flow file
+     * Ingest a flow file【写入一个flowFile】
      *
      * @param session session
      * @param file flow file
@@ -247,7 +249,7 @@ abstract class AbstractGeoIngestProcessor(dataStoreProperties: Seq[PropertyDescr
       val (success, failure) = try {
         ingest(session, file, fullFlowFileName, sft, writer)
       } finally {
-        writers.returnWriter(writer)
+        writers.returnWriter(writer)  //最终写入操作
       }
 
       session.putAttribute(file, "geomesa.ingest.successes", success.toString)
@@ -365,7 +367,7 @@ object AbstractGeoIngestProcessor {
   }
 
   /**
-    * Pooled feature writers, re-used between flow files
+    * Pooled feature writers, re-used between flow files【基于特定DS来写入数据】
     *
     * @param ds datastore
     * @param timeout how long to wait between flushes of cached feature writers, in millis
@@ -376,10 +378,12 @@ object AbstractGeoIngestProcessor {
       new CacheLoader[String, ObjectPool[SimpleFeatureWriter]] {
         override def load(key: String): ObjectPool[SimpleFeatureWriter] = {
           val factory = new BasePooledObjectFactory[SimpleFeatureWriter] {
-            override def create(): SimpleFeatureWriter = ds.getFeatureWriterAppend(key, Transaction.AUTO_COMMIT)
+            override def create(): SimpleFeatureWriter = ds.getFeatureWriterAppend(key, Transaction.AUTO_COMMIT)  //写入SFW
             override def wrap(obj: SimpleFeatureWriter): PooledObject[SimpleFeatureWriter] = new DefaultPooledObject(obj)
             override def destroyObject(p: PooledObject[SimpleFeatureWriter]): Unit = CloseWithLogging(p.getObject)
           }
+
+          //包装SFW
           val config = new GenericObjectPoolConfig[SimpleFeatureWriter]()
           config.setMaxTotal(-1)
           config.setMaxIdle(-1)
@@ -388,12 +392,12 @@ object AbstractGeoIngestProcessor {
           config.setTimeBetweenEvictionRunsMillis(math.max(1000, timeout / 5))
           config.setNumTestsPerEvictionRun(10)
 
-          new GenericObjectPool(factory, config)
+          new GenericObjectPool(factory, config)  //生成一个Pool对象
         }
       }
     )
 
-    override def borrowWriter(typeName: String): SimpleFeatureWriter = cache.get(typeName).borrowObject()
+    override def borrowWriter(typeName: String): SimpleFeatureWriter = cache.get(typeName).borrowObject()  //获取一个缓存的SFW
     override def returnWriter(writer: SimpleFeatureWriter): Unit =
       cache.get(writer.getFeatureType.getTypeName).returnObject(writer)
 
@@ -405,7 +409,7 @@ object AbstractGeoIngestProcessor {
   }
 
   /**
-    * Each flow file gets a new feature writer, which is closed after use
+    * Each flow file gets a new feature writer, which is closed after use【每个flowFile写一次】
     *
     * @param ds datastore
     */

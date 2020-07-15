@@ -71,6 +71,7 @@
         <accumulo-1.version>1.9.3</accumulo-1.version>
         <hbase.version>2.2.3</hbase.version>
         <hbase-1.version>1.4.12</hbase-1.version>
+        <cassandra.version>3.0.0</cassandra.version>
         <kafka.version>1.0.1</kafka.version>
         <zookeer.version>3.4.14</zookeer.version>
         <nifi.version>1.11.4</nifi.version>
@@ -231,6 +232,11 @@
             </dependency>
             <dependency>
                 <groupId>org.geomesa.nifi</groupId>
+                <artifactId>geomesa-cql-processors</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.geomesa.nifi</groupId>
                 <artifactId>geomesa-cql-nar</artifactId>
                 <version>${project.version}</version>
                 <type>nar</type>
@@ -262,6 +268,11 @@
             <dependency>
                 <groupId>org.locationtech.geomesa</groupId>
                 <artifactId>geomesa-cassandra-datastore_2.11</artifactId>
+                <version>${geomesa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.locationtech.geomesa</groupId>
+                <artifactId>geomesa-cassandra-tools_${scala.binary.version}</artifactId>
                 <version>${geomesa.version}</version>
             </dependency>
             <dependency>
@@ -318,6 +329,11 @@
                 <groupId>org.apache.hbase</groupId>
                 <artifactId>hbase-protocol</artifactId>
                 <version>${hbase.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.datastax.cassandra</groupId>
+                <artifactId>cassandra-driver-core</artifactId>
+                <version>${cassandra.version}</version>
             </dependency>
 
             <dependency>

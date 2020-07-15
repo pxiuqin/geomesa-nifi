@@ -65,6 +65,7 @@ trait ConverterIngestProcessor extends AbstractGeoIngestProcessor {
   override protected def getConfigProperties: Seq[PropertyDescriptor] =
     super.getConfigProperties ++ Seq(ConvertFlowFileAttributes)
 
+  //重写了创建IngestProcessor方法
   override protected def createIngest(
       context: ProcessContext,
       dataStore: DataStore,
@@ -78,7 +79,7 @@ trait ConverterIngestProcessor extends AbstractGeoIngestProcessor {
   }
 
   /**
-   * Converter ingest
+   * Converter ingest【继承了IngestProcessor，实现相关ingest方法】
    *
    * @param store data store
    * @param writers feature writers
@@ -110,7 +111,7 @@ trait ConverterIngestProcessor extends AbstractGeoIngestProcessor {
               }
 
               val factory = new BasePooledObjectFactory[SimpleFeatureConverter] {
-                override def create(): SimpleFeatureConverter = SimpleFeatureConverter(key._1, config)
+                override def create(): SimpleFeatureConverter = SimpleFeatureConverter(key._1, config)  //按照配置文件转换
                 override def wrap(obj: SimpleFeatureConverter): PooledObject[SimpleFeatureConverter] =
                   new DefaultPooledObject(obj)
                 override def destroyObject(p: PooledObject[SimpleFeatureConverter]): Unit = p.getObject.close()
