@@ -60,6 +60,7 @@
         <module>geomesa-hbase-bundle</module>
         <module>geomesa-kafka-bundle</module>
         <module>geomesa-redis-bundle</module>
+        <module>geomesa-cql-bundle</module>
     </modules>
 
     <properties>
@@ -228,7 +229,12 @@
                 <version>${project.version}</version>
                 <type>nar</type>
             </dependency>
-
+            <dependency>
+                <groupId>org.geomesa.nifi</groupId>
+                <artifactId>geomesa-cql-nar</artifactId>
+                <version>${project.version}</version>
+                <type>nar</type>
+            </dependency>
 
             <!-- geomesa -->
 
@@ -251,6 +257,11 @@
             <dependency>
                 <groupId>org.locationtech.geomesa</groupId>
                 <artifactId>geomesa-hbase-datastore_2.11</artifactId>
+                <version>${geomesa.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.locationtech.geomesa</groupId>
+                <artifactId>geomesa-cassandra-datastore_2.11</artifactId>
                 <version>${geomesa.version}</version>
             </dependency>
             <dependency>
